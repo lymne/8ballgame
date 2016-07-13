@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestSocket", "TestSocket\TestSocket.csproj", "{40403C2F-78A0-426B-8454-865A19BFAC54}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApplication", "ConsoleApplication\ConsoleApplication.csproj", "{31711E16-60A7-4B24-8612-FC70C5D2A891}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Game", "Game\Game.csproj", "{E3D79E38-CFDB-4CA9-B78D-7BB5599789C5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{40403C2F-78A0-426B-8454-865A19BFAC54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40403C2F-78A0-426B-8454-865A19BFAC54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40403C2F-78A0-426B-8454-865A19BFAC54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40403C2F-78A0-426B-8454-865A19BFAC54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31711E16-60A7-4B24-8612-FC70C5D2A891}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31711E16-60A7-4B24-8612-FC70C5D2A891}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31711E16-60A7-4B24-8612-FC70C5D2A891}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31711E16-60A7-4B24-8612-FC70C5D2A891}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3D79E38-CFDB-4CA9-B78D-7BB5599789C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3D79E38-CFDB-4CA9-B78D-7BB5599789C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3D79E38-CFDB-4CA9-B78D-7BB5599789C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3D79E38-CFDB-4CA9-B78D-7BB5599789C5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
