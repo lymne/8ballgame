@@ -1,5 +1,5 @@
 var Pool = {
-    showDebug: true,
+    showDebug: false,
     RED: 0,
     YELLOW: 1,
     WHITE: 2,
@@ -35,7 +35,7 @@ Pool.Preloader.prototype = {
 
         this.load.bitmapFont('fat-and-tiny');
 
-        this.load.images(['logo', 'table', 'cushions', 'cue', 'fill']);
+        this.load.images([ 'logo', 'table', 'cushions', 'cue', 'fill' ]);
 
         this.load.spritesheet('balls', 'balls.png', 26, 26);
 
@@ -71,12 +71,12 @@ Pool.MainMenu.prototype = {
         this.startText.anchor.x = 0.5;
         this.startText.smoothed = false;
         this.startText.tint = 0xff0000;
-
+        
 
         var that = this;
         var wsImpl = window.WebSocket || window.MozWebSocket;
         var personCount = document.getElementById('personCount');
-        window.ws = new wsImpl('ws://192.168.1.112:7181/');
+        window.ws = new wsImpl('ws://127.0.0.1:7181/');
         console.log(window.ws);
         ws.onmessage = function (evt) {
             var object = JSON.parse(evt.data);
@@ -90,14 +90,14 @@ Pool.MainMenu.prototype = {
                     break;
             }
         };
-
+       
         // when the connection is established, this method is called
         ws.onopen = function () {
 
         };
         // when the connection is closed, this method is called
         ws.onclose = function () {
-
+            personCount.innerHTML = "the server is not ready";
         }
     },
     //update the tips text
@@ -110,16 +110,15 @@ Pool.MainMenu.prototype = {
         }
         this.startText.setText(this.stateText);
     },
-    isReadyToStart: function (object) {
+    isReadyToStart:function(object) {
         if (object.isReady) {
             this.start(object.idArray);
         }
     },
-    readyRequest: function () {
-        var msg = { action: "ready" };
-        ws.send(JSON.stringify(msg));
+    readyRequest:function() {
+        ws.send("ready");
     },
-    start: function () {
+    start: function (idArray) {
         this.state.start('Pool.Game');
     }
 
@@ -129,8 +128,8 @@ Pool.Game = function (game) {
 
     //this.player1 = null;
     //this.player2 = null;
- 
-   
+    //this.currentPlayer = null;
+
     this.score1 = 0;
     this.scoreText1 = null;
 
@@ -140,7 +139,7 @@ Pool.Game = function (game) {
     this.currentText = null;
 
     this.speed = 0;
-    this.allowShotSpeed = 0.0;
+    this.allowShotSpeed = 20.0;
 
     this.balls = null;
     this.shadows = null;
@@ -159,11 +158,8 @@ Pool.Game = function (game) {
 
     this.pauseKey = null;
     this.debugKey = null;
-
-
-    this.isCurrentPlayer = null;
-    this.isTrueHit = false;
-    this.canRequestPosition = false;
+    //0 means can't move, 1 means can move
+    this.canMove = 0;
 };
 
 Pool.Game.prototype = {
@@ -175,12 +171,13 @@ Pool.Game.prototype = {
         this.resetting = false;
         //this.player1 = object.player1;
         //this.player2 = object.player2;
-        this.isCurrentPlayer = false;// player1 plays first
+        //this.currentPlayer = this.player1;// player1 plays first
         //console.log(this.player1, this.player2);
     },
 
     create: function () {
 
+        ws.send("start");
         this.stage.backgroundColor = 0x001b07;
 
         //  The table
@@ -226,39 +223,39 @@ Pool.Game.prototype = {
 
         //  Row 1 (5 balls)
 
-        //var y = 241;
+        var y = 241;
 
-        //this.makeBall(200, y, Pool.RED);
-        //this.makeBall(200, y + 32, Pool.YELLOW);
-        //this.makeBall(200, y + 64, Pool.YELLOW);
-        //this.makeBall(200, y + 96, Pool.RED);
-        //this.makeBall(200, y + 128, Pool.YELLOW);
+        this.makeBall(200, y, Pool.RED);
+        this.makeBall(200, y + 32, Pool.YELLOW);
+        this.makeBall(200, y + 64, Pool.YELLOW);
+        this.makeBall(200, y + 96, Pool.RED);
+        this.makeBall(200, y + 128, Pool.YELLOW);
 
-        //////  Row 2 (4 balls)
+        //  Row 2 (4 balls)
 
-        //y = 257;
+        y = 257;
 
-        //this.makeBall(232, y, Pool.YELLOW);
-        //this.makeBall(232, y + 32, Pool.RED);
-        //this.makeBall(232, y + 64, Pool.YELLOW);
-        //this.makeBall(232, y + 96, Pool.RED);
+        this.makeBall(232, y, Pool.YELLOW);
+        this.makeBall(232, y + 32, Pool.RED);
+        this.makeBall(232, y + 64, Pool.YELLOW);
+        this.makeBall(232, y + 96, Pool.RED);
 
-        //////  Row 3 (3 balls including black)
+        //  Row 3 (3 balls including black)
 
-        //y = 273;
+        y = 273;
 
-        //this.makeBall(264, y, Pool.RED);
-        //this.makeBall(264, y + 32, Pool.BLACK);
-        //this.makeBall(264, y + 64, Pool.YELLOW);
+        this.makeBall(264, y, Pool.RED);
+        this.makeBall(264, y + 32, Pool.BLACK);
+        this.makeBall(264, y + 64, Pool.YELLOW);
 
-        ////  Row 4 (2 balls)
+        //  Row 4 (2 balls)
 
-        //y = 289;
+        y = 289;
 
-        //this.makeBall(296, y, Pool.YELLOW);
-        //this.makeBall(296, y + 32, Pool.RED);
+        this.makeBall(296, y, Pool.YELLOW);
+        this.makeBall(296, y + 32, Pool.RED);
 
-        ////  Row 5 (single red ball)
+        //  Row 5 (single red ball)
 
         this.makeBall(328, 305, Pool.RED);
 
@@ -313,7 +310,7 @@ Pool.Game.prototype = {
         this.currentText = this.add.bitmapText(280, 40, 'fat-and-tiny', '1', 32);
         this.currentText.tint = 0xff0000;
         this.currentText.smoothed = false;
-
+  
         //  Press P to pause and resume the game
         this.pauseKey = this.input.keyboard.addKey(Phaser.Keyboard.P);
         this.pauseKey.onDown.add(this.togglePause, this);
@@ -325,72 +322,44 @@ Pool.Game.prototype = {
         //this.input.addMoveCallback(this.updateCue, this);
         //this.input.onDown.add(this.takeShot, this);
 
-        var msg = { action: "start" };
-        ws.send(JSON.stringify(msg));
+
         var that = this;
         ws.onmessage = function (evt) {
             var object = JSON.parse(evt.data);
 
             switch (object.action) {
-                case "updateCallback":
+                case "updateMsg":
                     that.handleMove(object.code);
-                    //that.updateHit(object.hitParams);                
                     that.updateMsg(object);
                     break;
-                case "hitCallback":
-                    console.log(object.hitParams);
-                    that.updateHit(object.hitParams);
-                    this.isUpdatePosition = false;
-                    break;
-                case "updateScore":
-                    that.score1 = object.score1;
-                    that.score2 = object.score2;
-                    that.scoreText1.text = "Player 1 SCORE: " + that.score1;
-                    that.scoreText2.text = "Player 2 SCORE: " + that.score2;
-                    break;
-                case "positionCallback":
-                    that.positionCallback(object);
-                    break;
-                case "canRequestPosition":
-                    that.canRequestPosition = true;
-                    break;
-
             }
         };
     },
-    //回调更新球体位置
-    positionCallback: function (object) {
-      
-            for (var i = 0; i < this.balls.children.length; i++) {
-                this.balls.children[i].body.x = object.positionArray[i].x;
-                this.balls.children[i].body.y = object.positionArray[i].y;
-            }
-            this.canRequestPosition = false;
+
+    switchPlayer:function() {
+        if (this.currentPlayer === this.player1) {
+            this.currentPlayer = this.player2;
+            this.currentText.setText("Now Player2 Move");
+        }else{
+            this.currentPlayer = this.player1;
+            this.currentText.setText("Now Player1 Move");
+        }
     },
     handleMove: function (code) {
-        this.isCurrentPlayer = code==0 ? false : true;
-        if (!this.isCurrentPlayer) {
+        console.log(code)
+        if (code === 0) {
             this.cue.visible = false;
             this.fill.visible = false;
-            this.input.deleteMoveCallback(0);
-            this.input.onDown.remove(this.takeShot, this);
+            
         } else {
             this.cue.visible = true;
             this.fill.visible = true;
-            this.input.addMoveCallback(this.updateCue, this);
-            this.input.onDown.add(this.takeShot, this);
+
         }
     },
     updateMsg: function (object) {
+        
         this.currentText.setText(object.msg + object.code);
-    },
-    updateHit: function (param) {
-        if (param != null) {
-            this.cueball.x = param.x;
-            this.cueball.y = param.y;
-            this.cueball.body.applyImpulse([param.px, param.py], this.cueball.x, this.cueball.y);
-            //this.updateCue();
-        }
     },
 
     togglePause: function () {
@@ -430,50 +399,47 @@ Pool.Game.prototype = {
 
     takeShot: function () {
 
-        if (this.speed > this.allowShotSpeed) {
+        if (this.speed > this.allowShotSpeed)
+        {
             return;
         }
 
         var speed = (this.aimLine.length / 3);
 
-        if (speed > 112) {
+        if (speed > 112)
+        {
             speed = 112;
         }
 
-        //this.updateCue();
+        this.updateCue();
 
-        var px = Math.cos(this.aimLine.angle) * speed;
-        var py = Math.sin(this.aimLine.angle) * speed;
-        var cx = this.cueball.x;
-        var cy = this.cueball.y;
-        var msg = { action: "hit", hitParams: { px: px, py: py, x: cx, y: cy } };
-        ws.send(JSON.stringify(msg));
-     //   this.cueball.body.applyImpulse([px, py], cx, cy);
+        var px = (Math.cos(this.aimLine.angle) * speed);
+        var py = (Math.sin(this.aimLine.angle) * speed);
+
+        this.cueball.body.applyImpulse([ px, py ], this.cueball.x, this.cueball.y);
+
         this.cue.visible = false;
         this.fill.visible = false;
-        console.log(JSON.stringify(msg));
-        this.isTrueHit = true;
+        ws.send(1);
     },
 
     hitPocket: function (ball, pocket) {
 
         //  Cue ball reset
-        if (ball.sprite === this.cueball) {
+        if (ball.sprite === this.cueball)
+        {
             this.resetCueBall();
         }
-        else {
+        else
+        {
             ball.sprite.shadow.destroy();
             ball.sprite.destroy();
 
-            //this.score += 100;
-            //this.scoreText.text = "SCORE: " + this.score;
+            this.score += 100;
+            this.scoreText.text = "SCORE: " + this.score;
 
-            if (this.isCurrentPlayer) {
-                var msg = { action: "hitpocket" };
-                ws.send(JSON.stringify(msg));
-            }
-
-            if (this.balls.total === 1) {
+            if (this.balls.total === 1)
+            {
                 this.time.events.add(3000, this.gameOver, this);
             }
 
@@ -515,14 +481,17 @@ Pool.Game.prototype = {
         var a = new Phaser.Circle(this.placeball.x, this.placeball.y, 26);
         var b = new Phaser.Circle(0, 0, 26);
 
-        for (var i = 0; i < this.balls.length; i++) {
+        for (var i = 0; i < this.balls.length; i++)
+        {
             var ball = this.balls.children[i];
 
-            if (ball.frame !== 2 && ball.exists) {
+            if (ball.frame !== 2 && ball.exists)
+            {
                 b.x = ball.x;
                 b.y = ball.y;
 
-                if (Phaser.Circle.intersects(a, b)) {
+                if (Phaser.Circle.intersects(a, b))
+                {
                     //  No point going any further
                     return;
                 }
@@ -558,59 +527,42 @@ Pool.Game.prototype = {
         this.fillRect.width = this.aimLine.length;
         this.fill.updateCrop();
 
-        //console.log("updatecue");
     },
 
     update: function () {
 
-        if (this.resetting) {
+        if (this.resetting)
+        {
             this.placeball.x = this.math.clamp(this.input.x, this.placeRect.left, this.placeRect.right);
             this.placeball.y = this.math.clamp(this.input.y, this.placeRect.top, this.placeRect.bottom);
             this.placeballShadow.x = this.placeball.x + 10;
             this.placeballShadow.y = this.placeball.y + 10;
         }
-        else {
+        else
+        {
             this.updateSpeed();
-            if (this.isCurrentPlayer) {
-                this.updateCue();
-
-            }
-            if (this.canRequestPosition) {
-
-                var msg = { action: "positionCallback" };
-                ws.send(JSON.stringify(msg));
-            }
-        
+            this.updateCue();
         }
+
     },
 
     updateSpeed: function () {
 
-        this.speed = Math.sqrt((this.cueball.body.velocity.x) * (this.cueball.body.velocity.x) + (this.cueball.body.velocity.y) * (this.cueball.body.velocity.y));
+        this.speed = Math.sqrt(this.cueball.body.velocity.x * this.cueball.body.velocity.x + this.cueball.body.velocity.y * this.cueball.body.velocity.y);
 
-            //if (this.speed <= this.allowShotSpeed && this.isCurrentPlayer) {
-            //    if (!this.cue.visible) {
-            //        this.cue.visible = true;
-            //        this.fill.visible = true;
-            //    }
-            //}
-         if (this.speed < 3) {
-            //for (var i = 0; i < this.balls.children.length; i++) {
-            //    this.balls.children[i].body.setZeroVelocity();
-            //}
-            var positionArray = [];
-            this.balls.children.forEach(function(item) {
-                item.body.setZeroVelocity();
-                var position = { x: item.body.x, y: item.body.y };
-                positionArray.push(position);
-            }, this);
-           //当前玩家打完球，球停止后发送坐标
-            if (this.cueball.body.velocity.x == 0 && this.cueball.body.velocity.y == 0 && !this.cue.visible && this.isCurrentPlayer && this.isTrueHit) {
-                var msg = { action: "updatePosition", positionArray: positionArray };
-                ws.send(JSON.stringify(msg));
+        if (this.speed < this.allowShotSpeed)
+        {
+            if (!this.cue.visible)
+            {
+                this.cue.visible = true;
+                this.fill.visible = true;
             }
-
         }
+        else if (this.speed < 3.0)
+        {
+            this.cueball.body.setZeroVelocity();
+        }
+
     },
 
     preRender: function () {
@@ -621,7 +573,6 @@ Pool.Game.prototype = {
 
     positionShadow: function (ball) {
 
-        
         ball.shadow.x = ball.x + 4;
         ball.shadow.y = ball.y + 4;
 
@@ -635,18 +586,15 @@ Pool.Game.prototype = {
 
     render: function () {
 
-        if (Pool.showDebug) {
-            if (this.speed < 6) {
+        if (Pool.showDebug)
+        {
+            if (this.speed < 6)
+            {
                 this.game.debug.geom(this.aimLine);
             }
 
             this.game.debug.text("speed: " + this.speed, 540, 24);
             this.game.debug.text("power: " + (this.aimLine.length / 3), 540, 48);
-            this.game.debug.text("x: " + this.cueball.x, 540, 72);
-            this.game.debug.text("y: " + this.cueball.y, 540, 96);
-            this.game.debug.text("rx: " + this.balls.children[0].x, 540, 150);
-            this.game.debug.text("ry: " + this.balls.children[0].y, 540, 170);
-
         }
 
     }
